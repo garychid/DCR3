@@ -1,4 +1,3 @@
-
 package com.spartasoap.dcr3
 
 import android.os.Bundle
@@ -43,30 +42,44 @@ fun DCRCalculatorUI() {
 
         Button(onClick = {
             try {
-                val boreVal = bore.toDouble()           // inches
-                val strokeVal = stroke.toDouble()       // inches
+                val boreVal = bore.toDouble()
+                val strokeVal = stroke.toDouble()
+                val rodVal = rodLength.toDouble()
                 val scrVal = staticCR.toDouble()
-                val ivcRad = Math.toRadians(ivcAngle.toDouble())
+                val ivcDeg = ivcAngle.toDouble()
+                val ivcRad = Math.toRadians(ivcDeg) // Convert to radians
 
-                // Cylinder swept volume (in³)
+                val crank = strokeVal / 2.0
                 val sweptVol = Math.PI * (boreVal / 2).pow(2.0) * strokeVal
-
-                // Clearance volume (Vc)
                 val vc = sweptVol / (scrVal - 1.0)
 
-                // Effective stroke using simple cosine method
-                val effStroke = strokeVal * cos(ivcRad)
+                // Accurate piston position at IVC angle
+                val x = crank * (1 - cos(ivcRad)) +
+                        rodVal - sqrt(rodVal.pow(2) - (crank * sin(ivcRad)).pow(2))
 
-                // Effective swept volume
+                val effStroke = strokeVal - x
                 val effSweptVol = Math.PI * (boreVal / 2).pow(2.0) * effStroke
-
-                // Dynamic CR
                 val dcr = (effSweptVol + vc) / vc
+
+                // Optional: Debugging Output (logs to console/logcat)
+                println("========== DEBUG INFO ==========")
+                println("Crank Radius: $crank in")
+                println("Rod Length: $rodVal in")
+                println("Rod/Stroke Ratio: ${rodVal / crank}")
+                println("IVC Angle (deg): $ivcDeg")
+                println("IVC Angle (rad): $ivcRad")
+                println("Piston Pos at IVC (x): $x in")
+                println("Effective Stroke: $effStroke in")
+                println("Eff Swept Vol: $effSweptVol in³")
+                println("Clearance Vol (Vc): $vc in³")
+                println("DCR: $dcr")
+                println("================================")
 
                 result = "Dynamic CR: %.2f".format(dcr)
 
             } catch (e: Exception) {
                 result = "Invalid input!"
+                e.printStackTrace()
             }
         }) {
             Text("Calculate DCR")
